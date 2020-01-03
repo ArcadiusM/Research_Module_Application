@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import seaborn as sn
 from sklearn.ensemble import RandomForestClassifier
-import feature_process_helper
+import feature_engineering as fe
 from sklearn.model_selection import GridSearchCV
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
@@ -24,29 +24,30 @@ del X, y
 
 # Extract length and title of name
 print("Prepare data")
-X_train, X_test = feature_process_helper.names(X_train, X_test)
+X_train, X_test = fe.extractFromNames(X_train, X_test)
 
 # Replace missing age values with means grouped  by title and class
-X_train, X_test = feature_process_helper.age_impute(X_train, X_test)
+X_train, X_test = fe.imputeAge(X_train, X_test)
 
 # Take first letter of cabin
-X_train, X_test = feature_process_helper.cabin(X_train, X_test)
+X_train, X_test = fe.extractCabinLetter(X_train, X_test)
 
 # Fill missing values for embarked
-X_train, X_test = feature_process_helper.embarked_impute(X_train, X_test)
+X_train, X_test = fe.imputeEmbarked(X_train, X_test)
 
 # Determine family size
-X_train, X_test = feature_process_helper.fam_size(X_train, X_test)
+X_train, X_test = fe.extractFamilySize(X_train, X_test)
 
 # Extract ticket length
 X_train['Ticket_Len'] = X_train['Ticket'].apply(lambda x: len(x))
 X_test['Ticket_Len'] = X_test['Ticket'].apply(lambda x: len(x))
 
 # Create dummy variable for several columns
-X_train, X_test = feature_process_helper.dummies(X_train, X_test, columns = ['Pclass', 'Sex', 'Embarked',
-                                                                     'Cabin_Letter', 'Name_Title', 'Fam_Size'])
+X_train, X_test = fe.createDummies(X_train, X_test, columns = ['Pclass', 'Sex', 'Embarked', 'Cabin_Letter', 'Name_Title', 'Fam_Size'])
 
-X_train, X_test = feature_process_helper.drop(X_train, X_test, bye = ['Ticket'])
+# Delete unused columns
+X_train = X_train.drop(columns="Ticket")
+X_test = X_test.drop(columns="Ticket")
 
 # Tune hyper-parameters
 forest = RandomForestClassifier(max_features='auto',
@@ -55,7 +56,7 @@ forest = RandomForestClassifier(max_features='auto',
                                 n_jobs=-1)
 
 param_grid = { "criterion"   : ["gini", "entropy"],
-               "min_samples_leaf" : [1,5,10],
+               "min_samples_leaf" : [1, 5, 10],
                "min_samples_split" : [2, 4, 10, 12, 16],
                "n_estimators": [50, 100, 400, 700, 1000]}
 
@@ -66,7 +67,6 @@ param_search = GridSearchCV(estimator=forest,
                   n_jobs=-1)
 
 param_search = param_search.fit(X_train, y_train)
-
 
 print("Best Accuracy:", param_search.best_score_)
 print("Best Parameters:", param_search.best_params_)
