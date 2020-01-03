@@ -19,10 +19,10 @@ class MonteCarloSimulation():
         self.meanScores = []
         self.results = {}
         self.sampleSizes = sampleSizes
-        print(f"DGP: {dgp.__name__}")
+        print("DGP:", dgp.__name__)
 
     def simulate(self, method, simulationNum = 1000, evaluate="R2"):
-        print(f"Simulate {method.__name__}")
+        print("Simulate", method.__name__)
         meanScores = []
         for size in self.sampleSizes:
             print("Sample size:", size)
@@ -131,15 +131,19 @@ def linearRegression(features, target, random_state):
     return ols
 
 if __name__ == '__main__':
-    # Iterate through DGPs 
-    for dgp in [linearDGP, nonLinearDGP]:
-        mcs = MonteCarloSimulation(dgp, sampleSizes = [100, 1000, 5000, 10000])
+    # Plot RSS of random forest on increasing samples from non-linear DGP
+    mcs = MonteCarloSimulation(nonLinearDGP, sampleSizes = [100, 1000, 5000, 10000, 50000])
 
-        mcs.simulate(method=randomForestCV, simulationNum = 5, evaluate="RSS")
-
-        mcs.simulate(method=linearRegression, simulationNum = 5, evaluate="RSS")
-        
-        mcs.plot(title=f"RSS-Scores for a {dgp.__name__}",
-                 filePath=f"plots/forest_vs_ols_{dgp.__name__}")
-
+    mcs.simulate(method=randomForestCV, simulationNum = 1, evaluate="RSS")
     
+    mcs.plot(title="RSS-Scores for non-linear DGP",
+             filePath="plots/forest_vs_ols_nonlinearDGP")
+    # Compare RSS of random forest and ols on increasing sample sizes frim linear DGP
+    mcs = MonteCarloSimulation(linearDGP, sampleSizes = [100, 1000, 5000, 10000, 50000])
+
+    mcs.simulate(method=randomForestCV, simulationNum = 1, evaluate="RSS")
+
+    mcs.simulate(method=linearRegression, simulationNum = 1, evaluate="RSS")
+    
+    mcs.plot(title=f"RSS-Scores for linear DGP",
+                filePath=f"plots/forest_vs_ols_linearDGP")
