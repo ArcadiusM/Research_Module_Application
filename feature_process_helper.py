@@ -4,12 +4,15 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 
 
+
 def names(train, test):
     for i in [train, test]:
         i['Name_Len'] = i['Name'].apply(lambda x: len(x))
         i['Name_Title'] = i['Name'].apply(lambda x: x.split(',')[1]).apply(lambda x: x.split()[0])
+        i['Name_Correction'] = i['Name'].str.contains(r'\(.+\)', regex=True)
         del i['Name']
     return train, test
+
 
 def age_impute(train, test):
     for i in [train, test]:
