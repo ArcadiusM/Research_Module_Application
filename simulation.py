@@ -18,6 +18,7 @@ class MonteCarloSimulation():
         self.models = []
         self.meanScores = []
         self.results = {}
+        self.INDEX = np.arange(len(sampleSizes))
         self.sampleSizes = sampleSizes
         print("DGP:", dgp.__name__)
 
@@ -27,12 +28,13 @@ class MonteCarloSimulation():
         for size in self.sampleSizes:
             print("Sample size:", size)
             # Generate test set
-            X_test, y_test = self.dgp(random_state = size, n=round(size*0.2))
+            # X_test, y_test = self.dgp(random_state = size, n=round(size*0.2))
+            X_test, y_test = self.dgp(random_state = size, n=round(100))
             scores = []
             for iteration in range(simulationNum):
                 print("Iteration=", iteration + 1)
                 # Generate data
-                X, y = self.dgp(random_state = iteration, n=size)
+                X, y = self.dgp(random_state=iteration, n=size)
                 # fit model
                 model = method(X,y, random_state=iteration)
                 # Add fitted model to list
@@ -56,10 +58,40 @@ class MonteCarloSimulation():
             plt.plot(self.sampleSizes, result)
             labels.append(name)
 
-        plt.legend(labels, loc='upper left')
+        plt.legend(labels, loc='upper right')
         plt.xlabel('Sample Size')
         plt.ylabel('Score')
         plt.title(title)
+        if filePath:
+            plt.savefig(filePath)
+        else:
+            plt.show()
+        plt.clf()
+
+    def bar(self, title="Score for different sample sizes", filePath="", legend=True):
+        labels = []
+        index = self.INDEX
+        barWidth = 0.3
+        ax = plt.subplot(111)
+        for name, result in self.results.items():
+            
+            ax.bar(index + barWidth, result, barWidth,
+                    label=name)
+            index = index + barWidth
+            labels.append(name)
+
+        labelPosition = self.INDEX + ((len(self.results) + 1)*barWidth)/2
+        plt.xticks(labelPosition, self.sampleSizes)
+        if legend:
+            plt.legend(labels, loc='upper right')
+        plt.xlabel('Sample Size')
+        plt.ylabel('Score')
+        plt.title(title)
+        # ax.set_xlabel('Sample Size')
+        # ax.set_ylabel('Score')
+        # ax.set_title(title)
+        # ax.legend()
+        
         if filePath:
             plt.savefig(filePath)
         else:
@@ -71,11 +103,11 @@ def nonLinearDGP(random_state, beta=[0.3, 5, 10, 15], n=1000):
     """ y = beta_0 + beta_1*I(x1 >= 0, x2 >= 0) + beta_2*I(x1 >= 0, x2 < 0) + beta_3*I(x1 < 0) + e """
     np.random.seed(random_state)
     
-    mu, sigma = 0, 2 # mean and standard deviation
+    mu, sigma = 0, 3 # mean and standard deviation
     
     
 
-    eps = np.random.normal(mu, 2, size=n)
+    eps = np.random.normal(mu, 1, size=n)
     X = pd.DataFrame( np.random.normal(mu, sigma, size=(n, 2)), columns=('x1', 'x2') )
     y = (beta[0] 
          + beta[1] * X.apply(lambda x: float(x['x1'] >= 0 and x['x2'] >= 0), axis=1) 
@@ -90,8 +122,8 @@ def linearDGP(random_state, beta=[0.3, 5, 10, 15], n=1000):
     """ y = beta_0 + beta_1*x1 + beta_2*x2 + beta_3*x3 + e """
     np.random.seed(random_state)
     
-    mu, sigma = 0, 2 # mean and standard deviation
-    eps = np.random.normal(mu, 2, size=n)
+    mu, sigma = 0, 3 # mean and standard deviation
+    eps = np.random.normal(mu, 1, size=n)
     X = pd.DataFrame( np.random.normal(mu, sigma, size=(n, 3)), columns=('x1', 'x2', 'x3') )
     
     y = (beta[0] 
@@ -130,20 +162,23 @@ def linearRegression(features, target, random_state):
     ols = LinearRegression().fit(features, target)
     return ols
 
+
 if __name__ == '__main__':
-    # Plot RSS of random forest on increasing samples from non-linear DGP
-    mcs = MonteCarloSimulation(nonLinearDGP, sampleSizes = [100, 1000, 5000, 10000, 50000])
+    # Compare RSS of random forest and ols on increasing sample sizes from non-linear DGP
+    mcs = MonteCarloSimulation(nonLinearDGP, sampleSizes = [100, 500, 1000, 5000, 10000, 50000, 75000, 100000])
 
     mcs.simulate(method=randomForestCV, simulationNum = 1, evaluate="RSS")
+    mcs.simulate(method=linearRegression, simulationNum = 1, evaluate="RSS")
     
-    mcs.plot(title="RSS-Scores for non-linear DGP",
-             filePath="plots/forest_vs_ols_nonlinearDGP")
-    # Compare RSS of random forest and ols on increasing sample sizes frim linear DGP
-    mcs = MonteCarloSimulation(linearDGP, sampleSizes = [100, 1000, 5000, 10000, 50000])
+    mcs.bar(title="RSS-Scores for non-linear DGP",
+            filePath="plots/forest_vs_ols_nonlinearDGP")            
+
+    # Compare RSS of random forest and ols on increasing sample sizes from linear DGP
+    mcs = MonteCarloSimulation(linearDGP, sampleSizes = [100, 1000, 5000, 10000, 50000, 100000])
 
     mcs.simulate(method=randomForestCV, simulationNum = 1, evaluate="RSS")
 
     mcs.simulate(method=linearRegression, simulationNum = 1, evaluate="RSS")
     
-    mcs.plot(title=f"RSS-Scores for linear DGP",
-                filePath=f"plots/forest_vs_ols_linearDGP")
+    mcs.bar(title=f"RSS-Scores for linear DGP",
+            filePath=f"plots/forest_vs_ols_linearDGP")

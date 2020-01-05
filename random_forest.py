@@ -55,25 +55,25 @@ forest = RandomForestClassifier(max_features='auto',
                                 random_state=1,
                                 n_jobs=-1)
 
-param_grid = { "criterion"   : ["gini", "entropy"],
-               "min_samples_leaf" : [1, 5, 10],
-               "min_samples_split" : [2, 4, 10, 12, 16],
-               "n_estimators": [50, 100, 400, 700, 1000]}
+paramGrid = { "criterion": ["gini", "entropy"],
+              "min_samples_leaf": [1, 5, 10],
+              "min_samples_split": [2, 4, 10, 12, 16],
+              "n_estimators": [50, 100, 400, 700, 1000]}
 
-param_search = GridSearchCV(estimator=forest,
-                  param_grid=param_grid,
+gs = GridSearchCV(estimator=forest,
+                  param_grid=paramGrid,
                   scoring='accuracy',
                   cv=3,
                   n_jobs=-1)
 
-param_search = param_search.fit(X_train, y_train)
+gs = gs.fit(X_train, y_train)
 
-print("Best Accuracy:", param_search.best_score_)
-print("Best Parameters:", param_search.best_params_)
+print("Best Accuracy:", gs.best_score_)
+print("Best Parameters:", gs.best_params_)
 
 
 # Fit model
-forest = RandomForestClassifier(**param_search.best_params_,
+forest = RandomForestClassifier(**gs.best_params_,
                              max_features='auto',
                              oob_score=True,
                              random_state=1,
@@ -83,19 +83,21 @@ forest.fit(X_train, y_train)
 print("Out-of-Bag Error:", "%.4f" % forest.oob_score_)
 
 # Plot feature importances
-feat_importances = pd.Series(forest.feature_importances_, index=X_train.columns).sort_values(ascending=True)
-feat_importances.nlargest(10).plot(kind='barh')
+featImportances = pd.Series(forest.feature_importances_, index=X_train.columns).sort_values(ascending=True)
+featImportances.nlargest(10).plot(kind='barh')
 plt.title("Random Forest Feature Importances (MDI)")
 plt.savefig("plots/feature_importances")
 plt.clf()
 
 # Plot confusion matrix
 y_pred = forest.predict(X_test)
+print("Accuracy:", forest.score(X_test, y_test))
 
 pred_labels = ["Died" if group==0 else "Survived"  for group in y_pred]
 test_labels = ["Died" if group==0 else "Survived"  for group in y_test]
 
-ax = skplt.metrics.plot_confusion_matrix(test_labels, pred_labels, normalize=True,
+ax = skplt.metrics.plot_confusion_matrix(test_labels, pred_labels,
+                                         normalize=True,
                                          title="Confusion matrix")
 bottom, top = ax.get_ylim()
 ax.set_ylim(bottom + 0.5, top - 0.5)
