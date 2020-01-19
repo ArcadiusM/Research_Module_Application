@@ -1,6 +1,5 @@
-import os
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.model_selection import GridSearchCV
 import matplotlib.pyplot as plt
 import scikitplot as skplt
@@ -19,17 +18,16 @@ del data
 X_train, X_test, y_train, y_test = clean.clean_titanic_data(x=X, y=y)
 
 # Tune hyper-parameters
-forest = RandomForestClassifier(max_features='auto',
-                                oob_score=True,
-                                random_state=1,
-                                n_jobs=-1)
+gradient_boosting = GradientBoostingClassifier(max_features='auto',
+                                               random_state=1
+                                               )
 
-paramGrid = {"criterion": ["gini", "entropy"],
+paramGrid = {"loss": ["deviance", "exponential"],
              "min_samples_leaf": [1, 5, 10],
              "min_samples_split": [2, 4, 10, 12, 16],
              "n_estimators": [50, 100, 400, 700, 1000]}
 
-gs = GridSearchCV(estimator=forest,
+gs = GridSearchCV(estimator=gradient_boosting,
                   param_grid=paramGrid,
                   scoring='accuracy',
                   cv=3,
@@ -41,25 +39,22 @@ print("Best Accuracy:", gs.best_score_)
 print("Best Parameters:", gs.best_params_)
 
 # Fit model
-forest = RandomForestClassifier(**gs.best_params_,
-                                max_features='auto',
-                                oob_score=True,
-                                random_state=1,
-                                n_jobs=-1)
-forest.fit(X_train, y_train)
-
-print("Out-of-Bag Error:", "%.4f" % forest.oob_score_)
+gradient_boosting = GradientBoostingClassifier(**gs.best_params_,
+                                               max_features='auto',
+                                               random_state=1,
+                                               )
+gradient_boosting.fit(X_train, y_train)
 
 # Plot feature importances
-featImportances = pd.Series(forest.feature_importances_, index=X_train.columns).sort_values(ascending=True)
+featImportances = pd.Series(gradient_boosting.feature_importances_, index=X_train.columns).sort_values(ascending=True)
 featImportances.nlargest(10).plot(kind='barh')
-plt.title("Random Forest Feature Importances (MDI)")
-plt.savefig("plots/feature_importances_random_forest")
+plt.title("Gradient Boosting Feature Importances")
+plt.savefig("plots/feature_importances_gradient_boosting")
 plt.clf()
 
 # Plot confusion matrix
-y_pred = forest.predict(X_test)
-print("Accuracy:", forest.score(X_test, y_test))
+y_pred = gradient_boosting.predict(X_test)
+print("Accuracy:", gradient_boosting.score(X_test, y_test))
 
 pred_labels = ["Died" if group == 0 else "Survived" for group in y_pred]
 test_labels = ["Died" if group == 0 else "Survived" for group in y_test]
@@ -69,4 +64,4 @@ ax = skplt.metrics.plot_confusion_matrix(test_labels, pred_labels,
                                          title="Confusion matrix")
 bottom, top = ax.get_ylim()
 ax.set_ylim(bottom + 0.5, top - 0.5)
-plt.savefig("plots/confusion_matrix_random_forest")
+plt.savefig("plots/confusion_matrix_gradient_boosting")
