@@ -20,10 +20,12 @@ class MonteCarloSimulation():
         self.results = {}
         self.INDEX = np.arange(len(sampleSizes))
         self.sampleSizes = sampleSizes
+        self.evaluate = ""
         print("DGP:", dgp.__name__)
 
     def simulate(self, method, simulationNum = 1000, evaluate="R2"):
         print("Simulate", method.__name__)
+        self.evaluate = evaluate
         meanScores = []
         for size in self.sampleSizes:
             print("Sample size:", size)
@@ -32,11 +34,12 @@ class MonteCarloSimulation():
             X_test, y_test = self.dgp(random_state = size, n=round(100))
             scores = []
             for iteration in range(simulationNum):
-                print("Iteration=", iteration + 1)
+                if simulationNum > 1:
+                    print("Iteration=", iteration + 1)
                 # Generate data
                 X, y = self.dgp(random_state=iteration, n=size)
                 # fit model
-                model = method(X,y, random_state=iteration)
+                model = method(X, y, random_state=iteration)
                 # Add fitted model to list
                 self.models.append(model)
                 # Evaluate
@@ -68,7 +71,7 @@ class MonteCarloSimulation():
             plt.show()
         plt.clf()
 
-    def bar(self, title="Score for different sample sizes", filePath="", legend=True):
+    def bar(self, title="Score for different sample sizes", filePath="", logScale=False):
         labels = []
         index = self.INDEX
         barWidth = 0.3
@@ -77,15 +80,17 @@ class MonteCarloSimulation():
             
             ax.bar(index + barWidth, result, barWidth,
                     label=name)
+            if logScale:
+                ax.set_yscale('log')
             index = index + barWidth
             labels.append(name)
 
         labelPosition = self.INDEX + ((len(self.results) + 1)*barWidth)/2
         plt.xticks(labelPosition, self.sampleSizes)
-        if legend:
+        if len(labels) > 1:
             plt.legend(labels, loc='upper right')
         plt.xlabel('Sample Size')
-        plt.ylabel('Score')
+        plt.ylabel(self.evaluate)
         plt.title(title)
         # ax.set_xlabel('Sample Size')
         # ax.set_ylabel('Score')
@@ -170,15 +175,16 @@ if __name__ == '__main__':
     mcs.simulate(method=randomForestCV, simulationNum = 1, evaluate="RSS")
     mcs.simulate(method=linearRegression, simulationNum = 1, evaluate="RSS")
     
-    mcs.bar(title="RSS-Scores for non-linear DGP",
+    mcs.bar(title="RSS for non-linear DGP",
             filePath="plots/forest_vs_ols_nonlinearDGP")            
 
     # Compare RSS of random forest and ols on increasing sample sizes from linear DGP
-    mcs = MonteCarloSimulation(linearDGP, sampleSizes = [100, 1000, 5000, 10000, 50000, 100000])
+    mcs = MonteCarloSimulation(linearDGP, sampleSizes = [100, 1000, 5000, 10000, 50000, 75000, 100000])
 
     mcs.simulate(method=randomForestCV, simulationNum = 1, evaluate="RSS")
 
     mcs.simulate(method=linearRegression, simulationNum = 1, evaluate="RSS")
     
-    mcs.bar(title=f"RSS-Scores for linear DGP",
-            filePath=f"plots/forest_vs_ols_linearDGP")
+    mcs.bar(title=f"RSS for linear DGP",
+            filePath=f"plots/forest_vs_ols_linearDGP", 
+            logScale=True)
