@@ -223,7 +223,7 @@ def linearRegression(features, target, random_state):
 
 if __name__ == '__main__':
     # Compare RSS of random forest and ols on increasing sample sizes from non-linear DGP
-    mcs = MonteCarloSimulation(nonLinearDGP, sampleSizes = [100, 500, 1000, 5000])
+    mcs = MonteCarloSimulation(nonLinearDGP, sampleSizes = [100, 500, 1000, 5000, 10000, 50000, 75000, 100000])
 
     mcs.simulate(method=randomForestCV, simulationNum = 1, evaluate="RSS")
     mcs.bvplot(filePath="plots/bias_var_nonlinearDGP")
@@ -232,8 +232,9 @@ if __name__ == '__main__':
     mcs.bar(title="RSS for non-linear DGP",
             filePath="plots/forest_vs_ols_nonlinearDGP")
 
+
     # Compare RSS of random forest and ols on increasing sample sizes from linear DGP
-    mcs = MonteCarloSimulation(linearDGP, sampleSizes = [100, 1000, 5000])
+    mcs = MonteCarloSimulation(linearDGP, sampleSizes = [100, 1000, 5000, 10000, 50000, 75000, 100000])
 
     mcs.simulate(method=randomForestCV, simulationNum = 1, evaluate="RSS")
     mcs.bvplot(filePath="plots/bias_var_linearDGP")
