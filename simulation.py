@@ -188,7 +188,7 @@ def bias_var_decomp(model, X_test, y_test, dgp):
     elif dgp == nonLinearDGP:
         y_true = nonLinearDGP_pure(X_test)
     bias = np.mean((y_true - y_pred)**2)
-    resid = np.mean((y_true - y_test)**2)
+    resid = np.mean(y_true - y_test)**2
     var = loss - bias - resid
     return loss, bias, var
 
