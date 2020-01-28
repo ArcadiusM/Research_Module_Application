@@ -242,3 +242,4 @@ if __name__ == '__main__':
     mcs.bar(title=f"RSS for linear DGP",
             filePath=f"plots/forest_vs_ols_linearDGP",
             logScale=True)
+    mcs.bvplot(filePath="plots/bias_var_linearDGP")
