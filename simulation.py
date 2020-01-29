@@ -82,7 +82,7 @@ class MonteCarloSimulation():
 
     def bvplot(self, title="Bias-variance decomposition for different sample sizes", filePath="", logScale=False):
         ax = plt.subplot(111)
-        for name, result in self.bvresults.items():
+        for _, result in self.bvresults.items():
             for pbv_key in result.keys():
                 ax.plot(self.sampleSizes, pbv_key, data=result)
         if logScale:

@@ -76,9 +76,9 @@ with open("logs/adaboost_results.log", "w") as logFile:
           file=logFile)
 
 # Plot confusion matrix
-df_cm = pd.DataFrame(confMatrix, ["Survived", "Died"], ["Survived", "Died"])
+df_cm = pd.DataFrame(confMatrix, ["Survived (True)", "Died (True)"], ["Survived (Predicted)", "Died (Predicted)"])
 print(confMatrix)
-sn.set(font_scale=3) # for label size
+sn.set(font_scale=2.5) # for label size
 ax = sn.heatmap(df_cm, cmap='coolwarm', annot=True, annot_kws={"size": 45}) # font size
 bottom, top = ax.get_ylim()
 ax.set_ylim(bottom + 0.5, top - 0.5)
