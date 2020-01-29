@@ -89,7 +89,7 @@ class MonteCarloSimulation():
             ax.set_yscale('log')
         plt.legend()
         plt.xlabel('Sample Size')
-        plt.ylabel('Score')
+        plt.ylabel('RSS')
         plt.title(title)
 
         if filePath:
@@ -237,10 +237,10 @@ if __name__ == '__main__':
 
 
     # # Compare RSS of random forest and ols on increasing sample sizes from linear DGP
-    mcs = MonteCarloSimulation(linearDGP, sampleSizes = [100, 500, 1000, 5000, 10000])
+    mcs = MonteCarloSimulation(nonLinearDGP, sampleSizes = [100, 500, 1000, 5000, 10000])
 
     mcs.simulate(method=randomForestCV, simulationNum = 100, evaluate="RSS")
-    mcs.bvplot(filePath="plots/bias_var_linearDGP", logScale=True)
+    mcs.bvplot(filePath="plots/bias_var_nonlinearDGP")
     # mcs.simulate(method=linearRegression, simulationNum = 1, evaluate="RSS")
 
     # mcs.bar(title=f"RSS for linear DGP",
