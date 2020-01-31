@@ -80,7 +80,7 @@ class MonteCarloSimulation():
             plt.show()
         plt.clf()
 
-    def bvplot(self, title="Bias-variance decomposition for different sample sizes", filePath="", logScale=False):
+    def bvplot(self, title="", filePath="", logScale=False):
         ax = plt.subplot(111)
         for _, result in self.bvresults.items():
             for pbv_key in result.keys():
@@ -89,7 +89,7 @@ class MonteCarloSimulation():
             ax.set_yscale('log')
         plt.legend()
         plt.xlabel('Sample Size')
-        plt.ylabel('RSS')
+        plt.ylabel('Error')
         plt.title(title)
 
         if filePath:
@@ -225,24 +225,26 @@ def linearRegression(features, target, random_state):
 
 
 if __name__ == '__main__':
-    # # Compare RSS of random forest and ols on increasing sample sizes from non-linear DGP
-    # mcs = MonteCarloSimulation(nonLinearDGP, sampleSizes = [100, 500, 1000, 5000, 10000, 50000, 75000, 100000])
-
-    # mcs.simulate(method=randomForestCV, simulationNum = 1, evaluate="RSS")
-    # mcs.bvplot(filePath="plots/bias_var_nonlinearDGP")
-    # mcs.simulate(method=linearRegression, simulationNum = 1, evaluate="RSS")
-
-    # mcs.bar(title="RSS for non-linear DGP",
-    #         filePath="plots/forest_vs_ols_nonlinearDGP")
-
-
-    # # Compare RSS of random forest and ols on increasing sample sizes from linear DGP
-    mcs = MonteCarloSimulation(nonLinearDGP, sampleSizes = [100, 500, 1000, 5000, 10000])
+    # Compare RSS of random forest and ols on increasing sample sizes from non-linear DGP
+    mcs = MonteCarloSimulation(nonLinearDGP, sampleSizes = [100, 500, 1000, 5000, 10000, 50000, 75000, 100000])
 
     mcs.simulate(method=randomForestCV, simulationNum = 100, evaluate="RSS")
-    mcs.bvplot(filePath="plots/bias_var_nonlinearDGP")
-    # mcs.simulate(method=linearRegression, simulationNum = 1, evaluate="RSS")
+    mcs.bvplot(title="Bias-Variance Decomposition for Different Sample Sizes\nNon-Linear DGP",
+                filePath="plots/bias_var_nonlinearDGP")
+    mcs.simulate(method=linearRegression, simulationNum = 100, evaluate="RSS")
 
-    # mcs.bar(title=f"RSS for linear DGP",
-    #         filePath=f"plots/forest_vs_ols_linearDGP",
-    #         logScale=True)
+    mcs.bar(title="RSS for non-linear DGP",
+            filePath="plots/forest_vs_ols_nonlinearDGP")
+
+
+    # Compare RSS of random forest and ols on increasing sample sizes from linear DGP
+    mcs = MonteCarloSimulation(linearDGP, sampleSizes = [100, 500, 1000, 5000, 10000, 50000, 75000, 100000])
+
+    mcs.simulate(method=randomForestCV, simulationNum = 100, evaluate="RSS")
+    mcs.bvplot(title="Bias-Variance Decomposition for Different Sample Sizes\nLinear DGP",
+        filePath="plots/bias_var_linearDGP", logScale=True)
+    mcs.simulate(method=linearRegression, simulationNum = 100, evaluate="RSS")
+
+    mcs.bar(title=f"RSS for linear DGP",
+            filePath=f"plots/forest_vs_ols_linearDGP",
+            logScale=True)
